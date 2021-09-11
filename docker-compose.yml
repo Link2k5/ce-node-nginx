@@ -4,7 +4,6 @@ services:
   nginx:
     build:
       context: ./nginx
-      dockerfile: Dockerfile
     container_name: nginx
     ports:
       - "8080:80"
@@ -31,7 +30,6 @@ services:
   app:
     build:
       context: ./node
-      dockerfile: Dockerfile.prod
     container_name: app
     entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
     command: bash -c "npm install && node app.js"
