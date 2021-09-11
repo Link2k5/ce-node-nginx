@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "8080:80"
+    networks:
+      - node-app
+    depends_on:
+      - app
+
+  db:
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: node_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d
+    networks:
+      - node-app
+
+  app:
+    build:
+      context: ./node
+      dockerfile: Dockerfile.prod
+    container_name: app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
+    command: bash -c "npm install && node app.js"
+    tty: true
+    networks:
+      - node-app
+    depends_on:
+      - db
+
+networks:
+  node-app:
+    driver: bridge
